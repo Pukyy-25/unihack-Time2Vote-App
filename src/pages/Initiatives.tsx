@@ -1,9 +1,11 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { MapPin, Clock, Users, ArrowLeft, Filter } from "lucide-react";
+import { MapPin, Clock, Users, ArrowLeft, Filter, Building2, LogOut } from "lucide-react";
+import { useTown } from "@/contexts/TownContext";
+import { toast } from "sonner";
 
 const categories = ["All", "Infrastructure", "Environment", "Education", "Healthcare", "Safety"];
 
@@ -78,6 +80,15 @@ const mockInitiatives = [
 
 const Initiatives = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const { selectedTown, setSelectedTown } = useTown();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!selectedTown) {
+      toast.error("Please select a town first");
+      navigate("/");
+    }
+  }, [selectedTown, navigate]);
 
   const filteredInitiatives = selectedCategory === "All" 
     ? mockInitiatives 
@@ -88,20 +99,44 @@ const Initiatives = () => {
     return total > 0 ? Math.round((votesFor / total) * 100) : 0;
   };
 
+  const handleChangeTown = () => {
+    setSelectedTown(null);
+    navigate("/");
+    toast.info("Town changed", {
+      description: "Select a new town code to continue"
+    });
+  };
+
+  if (!selectedTown) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border bg-card">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-4">
             <Link to="/" className="flex items-center gap-2 text-foreground hover:text-primary transition-colors">
               <ArrowLeft className="h-5 w-5" />
-              <span className="font-semibold">Back to Home</span>
+              <span className="font-semibold">Înapoi</span>
             </Link>
-            <h1 className="text-2xl font-bold text-foreground">Active Initiatives</h1>
-            <Button variant="outline" size="sm">
-              <Filter className="h-4 w-4 mr-2" />
-              Map View
+            
+            <div className="flex items-center gap-3">
+              <Building2 className="h-5 w-5 text-primary" />
+              <div className="text-center">
+                <h1 className="text-lg md:text-xl font-bold text-foreground">{selectedTown.name}</h1>
+                <p className="text-xs text-muted-foreground">{selectedTown.county}</p>
+              </div>
+            </div>
+
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={handleChangeTown}
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Schimbă Orașul
             </Button>
           </div>
         </div>
@@ -128,6 +163,13 @@ const Initiatives = () => {
 
       {/* Initiatives Grid */}
       <main className="container mx-auto px-4 py-8">
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-foreground mb-2">Inițiative Active</h2>
+          <p className="text-muted-foreground">
+            {filteredInitiatives.length} inițiative disponibile pentru votare
+          </p>
+        </div>
+
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filteredInitiatives.map((initiative) => {
             const votePercentage = getVotePercentage(initiative.votesFor, initiative.votesAgainst);
@@ -188,7 +230,7 @@ const Initiatives = () => {
 
                     {/* CTA */}
                     <Button className="w-full" variant="default">
-                      View & Vote
+                      Vezi & Votează
                     </Button>
                   </div>
                 </Card>
