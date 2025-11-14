@@ -49,12 +49,6 @@ const Index = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  useEffect(() => {
-    if (selectedTown && user) {
-      navigate("/initiatives");
-    }
-  }, [selectedTown, user, navigate]);
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
