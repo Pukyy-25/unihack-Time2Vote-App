@@ -28,23 +28,27 @@ const Initiatives = () => {
   }, [selectedTown, navigate]);
 
   const { data: initiatives = [], refetch } = useQuery({
-    queryKey: ['initiatives'],
+    queryKey: ['initiatives', selectedTown?.county],
     queryFn: async () => {
+      if (!selectedTown) return [];
+      
       const { data, error } = await supabase
         .from('initiatives')
         .select(`
           *,
-          counties (
+          counties!inner (
             name,
             cnp_code
           )
         `)
         .eq('status', 'active')
+        .eq('counties.name', selectedTown.county)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       return data || [];
-    }
+    },
+    enabled: !!selectedTown
   });
 
   // Realtime subscription for new initiatives
