@@ -4,12 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import { format } from "date-fns";
-import { romanianTowns } from "@/lib/towns";
+import { validateCnpCheckDigit, getCountyFromCnp } from "@/lib/cnp-counties";
 
 const loginSchema = z.object({
   email: z.string().trim().email({ message: "Email invalid" }),
@@ -20,40 +19,49 @@ const signupSchema = z.object({
   email: z.string().trim().email({ message: "Email invalid" }),
   password: z.string().min(6, { message: "Parola trebuie să aibă cel puțin 6 caractere" }),
   phoneNumber: z.string().min(10, { message: "Numărul de telefon trebuie să aibă cel puțin 10 cifre" }).regex(/^(\+4|0)[0-9]{9}$/, { message: "Număr de telefon invalid pentru România" }),
-  cnp: z.string().length(13, { message: "CNP-ul trebuie să aibă exact 13 cifre" }).regex(/^[0-9]{13}$/, { message: "CNP-ul trebuie să conțină doar cifre" }).refine((cnp) => {
-    // Extract birth date from CNP (digits 2-7: YYMMDD)
-    const yy = parseInt(cnp.substring(1, 3));
-    const mm = parseInt(cnp.substring(3, 5));
-    const dd = parseInt(cnp.substring(5, 7));
-    
-    // Validate month and day
-    if (mm < 1 || mm > 12 || dd < 1 || dd > 31) {
-      return false;
-    }
-    
-    // Determine century from first digit
-    const firstDigit = parseInt(cnp[0]);
-    let fullYear: number;
-    if (firstDigit === 1 || firstDigit === 2) {
-      fullYear = 1900 + yy;
-    } else if (firstDigit === 5 || firstDigit === 6) {
-      fullYear = 2000 + yy;
-    } else {
-      return false;
-    }
-    
-    // Calculate age
-    const birthDate = new Date(fullYear, mm - 1, dd);
-    const today = new Date();
-    const age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    const dayDiff = today.getDate() - birthDate.getDate();
-    const actualAge = monthDiff < 0 || (monthDiff === 0 && dayDiff < 0) ? age - 1 : age;
-    
-    return actualAge >= 18;
-  }, { message: "Trebuie să ai cel puțin 18 ani conform CNP-ului" }),
-  county: z.string().min(1, { message: "Județul este obligatoriu" }),
-  city: z.string().min(1, { message: "Localitatea este obligatorie" }),
+  cnp: z.string().length(13, { message: "CNP-ul trebuie să aibă exact 13 cifre" })
+    .regex(/^[0-9]{13}$/, { message: "CNP-ul trebuie să conțină doar cifre" })
+    .refine((cnp) => {
+      // Validate check digit
+      return validateCnpCheckDigit(cnp);
+    }, { message: "CNP invalid - cifra de control nu este corectă" })
+    .refine((cnp) => {
+      // Validate county code
+      const county = getCountyFromCnp(cnp);
+      return county !== null;
+    }, { message: "CNP invalid - cod de județ necunoscut" })
+    .refine((cnp) => {
+      // Extract birth date from CNP (digits 2-7: YYMMDD)
+      const yy = parseInt(cnp.substring(1, 3));
+      const mm = parseInt(cnp.substring(3, 5));
+      const dd = parseInt(cnp.substring(5, 7));
+      
+      // Validate month and day
+      if (mm < 1 || mm > 12 || dd < 1 || dd > 31) {
+        return false;
+      }
+      
+      // Determine century from first digit
+      const firstDigit = parseInt(cnp[0]);
+      let fullYear: number;
+      if (firstDigit === 1 || firstDigit === 2) {
+        fullYear = 1900 + yy;
+      } else if (firstDigit === 5 || firstDigit === 6) {
+        fullYear = 2000 + yy;
+      } else {
+        return false;
+      }
+      
+      // Calculate age
+      const birthDate = new Date(fullYear, mm - 1, dd);
+      const today = new Date();
+      const age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      const dayDiff = today.getDate() - birthDate.getDate();
+      const actualAge = monthDiff < 0 || (monthDiff === 0 && dayDiff < 0) ? age - 1 : age;
+      
+      return actualAge >= 18;
+    }, { message: "Trebuie să ai cel puțin 18 ani conform CNP-ului" }),
 });
 
 const Auth = () => {
@@ -63,19 +71,8 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [cnp, setCnp] = useState("");
-  const [county, setCounty] = useState("");
-  const [city, setCity] = useState("");
   const [loading, setLoading] = useState(false);
   const [session, setSession] = useState(null);
-
-  // Get unique counties
-  const counties = Array.from(new Set(romanianTowns.map(town => town.county))).sort();
-  
-  // Get cities for selected county
-  const cities = romanianTowns
-    .filter(town => town.county === county)
-    .map(town => town.name)
-    .sort();
 
   useEffect(() => {
     // Check for existing session
@@ -133,9 +130,7 @@ const Auth = () => {
           email, 
           password, 
           phoneNumber, 
-          cnp,
-          county,
-          city
+          cnp
         });
         
         if (!validation.success) {
@@ -161,6 +156,9 @@ const Auth = () => {
         }
         
         const birthDate = new Date(fullYear, mm - 1, dd);
+        
+        // Extract county from CNP
+        const county = getCountyFromCnp(cnpValue);
 
         const redirectUrl = `${window.location.origin}/`;
         const { data, error } = await supabase.auth.signUp({
@@ -184,9 +182,10 @@ const Auth = () => {
             .insert({
               user_id: data.user.id,
               birth_date: format(birthDate, 'yyyy-MM-dd'),
-              county: validation.data.county,
-              city: validation.data.city,
+              county: county || "Necunoscut",
+              city: "", // City is not extracted from CNP
               phone_number: validation.data.phoneNumber,
+              cnp: validation.data.cnp,
             });
 
           if (profileError) {
@@ -275,43 +274,8 @@ const Auth = () => {
                     required
                   />
                   <p className="text-xs text-muted-foreground">
-                    Cifrele 2-7 reprezintă data nașterii (AA/LL/ZZ)
+                    Județul va fi extras automat din CNP (cifrele 8-9)
                   </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="county">Județul</Label>
-                  <Select value={county} onValueChange={(value) => {
-                    setCounty(value);
-                    setCity(""); // Reset city when county changes
-                  }}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selectează județul" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {counties.map((countyName) => (
-                        <SelectItem key={countyName} value={countyName}>
-                          {countyName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="city">Localitatea</Label>
-                  <Select value={city} onValueChange={setCity} disabled={!county}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selectează localitatea" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {cities.map((cityName) => (
-                        <SelectItem key={cityName} value={cityName}>
-                          {cityName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                 </div>
               </>
             )}
