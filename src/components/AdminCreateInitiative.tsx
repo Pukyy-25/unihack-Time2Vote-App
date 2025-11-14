@@ -10,14 +10,14 @@ import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
 
 const categories = [
-  'infrastructură',
-  'mediu',
-  'educație',
-  'sănătate',
-  'cultură',
-  'sport',
+  'infrastructure',
+  'environment',
+  'education',
+  'health',
+  'culture',
+  'sports',
   'social',
-  'altele'
+  'other'
 ];
 
 export const AdminCreateInitiative = () => {
@@ -54,7 +54,7 @@ export const AdminCreateInitiative = () => {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
-        toast.error('Trebuie să fii autentificat');
+        toast.error('You must be authenticated');
         return;
       }
 
@@ -68,7 +68,7 @@ export const AdminCreateInitiative = () => {
 
       if (error) throw error;
 
-      toast.success('Inițiativa a fost creată cu succes!');
+      toast.success('Initiative created successfully!');
       setOpen(false);
       setFormData({
         title: '',
@@ -83,7 +83,7 @@ export const AdminCreateInitiative = () => {
       window.location.reload();
     } catch (error) {
       console.error('Error creating initiative:', error);
-      toast.error('Eroare la crearea inițiativei');
+      toast.error('Error creating initiative');
     } finally {
       setLoading(false);
     }
@@ -98,39 +98,39 @@ export const AdminCreateInitiative = () => {
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Creează Inițiativă Nouă</DialogTitle>
+          <DialogTitle>Create New Initiative</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="text-sm font-medium">Titlu</label>
+            <label className="text-sm font-medium">Title</label>
             <Input
               required
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              placeholder="Titlul inițiativei"
+              placeholder="Initiative title"
             />
           </div>
 
           <div>
-            <label className="text-sm font-medium">Descriere</label>
+            <label className="text-sm font-medium">Description</label>
             <Textarea
               required
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Descrierea detaliată a inițiativei"
+              placeholder="Detailed description of the initiative"
               rows={4}
             />
           </div>
 
           <div>
-            <label className="text-sm font-medium">Categorie</label>
+            <label className="text-sm font-medium">Category</label>
             <Select
               required
               value={formData.category}
               onValueChange={(value) => setFormData({ ...formData, category: value })}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Selectează categoria" />
+                <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
                 {categories.map((cat) => (
@@ -143,14 +143,14 @@ export const AdminCreateInitiative = () => {
           </div>
 
           <div>
-            <label className="text-sm font-medium">Județ</label>
+            <label className="text-sm font-medium">County</label>
             <Select
               required
               value={formData.county_id}
               onValueChange={(value) => setFormData({ ...formData, county_id: value })}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Selectează județul" />
+                <SelectValue placeholder="Select county" />
               </SelectTrigger>
               <SelectContent>
                 {counties?.map((county) => (
@@ -163,18 +163,18 @@ export const AdminCreateInitiative = () => {
           </div>
 
           <div>
-            <label className="text-sm font-medium">Localitate</label>
+            <label className="text-sm font-medium">Location</label>
             <Input
               required
               value={formData.location}
               onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-              placeholder="Oraș/Comună"
+              placeholder="City/Town"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium">Data începerii</label>
+              <label className="text-sm font-medium">Start Date</label>
               <Input
                 required
                 type="date"
@@ -183,7 +183,7 @@ export const AdminCreateInitiative = () => {
               />
             </div>
             <div>
-              <label className="text-sm font-medium">Data finalizării</label>
+              <label className="text-sm font-medium">End Date</label>
               <Input
                 required
                 type="date"
@@ -195,10 +195,10 @@ export const AdminCreateInitiative = () => {
 
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Anulează
+              Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? 'Se creează...' : 'Creează Inițiativa'}
+              {loading ? 'Creating...' : 'Create Initiative'}
             </Button>
           </div>
         </form>
