@@ -67,7 +67,7 @@ export const AdminStats = () => {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium">Total Initiatives</CardTitle>
+          <CardTitle className="text-sm font-medium">Total Inițiative</CardTitle>
           <BarChart3 className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
@@ -80,33 +80,33 @@ export const AdminStats = () => {
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium">Total Votes</CardTitle>
+          <CardTitle className="text-sm font-medium">Total Voturi</CardTitle>
           <Vote className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{stats?.totalVotes || 0}</div>
           <p className="text-xs text-muted-foreground mt-1">
-            All initiatives
+            Toate inițiativele
           </p>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium">Users</CardTitle>
+          <CardTitle className="text-sm font-medium">Utilizatori</CardTitle>
           <Users className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{stats?.totalUsers || 0}</div>
           <p className="text-xs text-muted-foreground mt-1">
-            Registered
+            Înregistrați
           </p>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium">Participation</CardTitle>
+          <CardTitle className="text-sm font-medium">Participare</CardTitle>
           <TrendingUp className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
@@ -116,7 +116,7 @@ export const AdminStats = () => {
               : 0}%
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            Vote rate
+            Rată de vot
           </p>
         </CardContent>
       </Card>

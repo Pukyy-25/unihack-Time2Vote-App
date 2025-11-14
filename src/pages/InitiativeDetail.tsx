@@ -80,7 +80,7 @@ const InitiativeDetail = () => {
   const handleVote = async (voteType: "for" | "against" | "abstain") => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      toast.error("You must be authenticated to vote");
+      toast.error("Trebuie să fii autentificat pentru a vota");
       navigate("/auth");
       return;
     }
@@ -102,7 +102,7 @@ const InitiativeDetail = () => {
           .eq('id', existing.id);
 
         if (error) throw error;
-        toast.success("Vote updated successfully!");
+        toast.success("Vot actualizat cu succes!");
       } else {
         // Insert new vote
         const { error } = await supabase
@@ -114,7 +114,7 @@ const InitiativeDetail = () => {
           });
 
         if (error) throw error;
-        toast.success("Vote recorded successfully!");
+        toast.success("Vot înregistrat cu succes!");
       }
 
       setUserVote(voteType);
@@ -122,7 +122,7 @@ const InitiativeDetail = () => {
       refetchVoteCounts();
     } catch (error) {
       console.error("Error voting:", error);
-      toast.error("An error occurred while voting");
+      toast.error("A apărut o eroare la votare");
     }
   };
 
@@ -138,7 +138,7 @@ const InitiativeDetail = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <p className="text-muted-foreground">Loading...</p>
+          <p className="text-muted-foreground">Se încarcă...</p>
         </div>
       </div>
     );
@@ -148,9 +148,9 @@ const InitiativeDetail = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <p className="text-muted-foreground">Initiative not found</p>
+          <p className="text-muted-foreground">Inițiativa nu a fost găsită</p>
           <Button onClick={() => navigate("/initiatives")} className="mt-4">
-            Back to Initiatives
+            Înapoi la inițiative
           </Button>
         </div>
       </div>
@@ -169,7 +169,7 @@ const InitiativeDetail = () => {
         <div className="container mx-auto px-4 py-4">
           <Link to="/initiatives" className="flex items-center gap-2 text-foreground hover:text-primary transition-colors">
             <ArrowLeft className="h-5 w-5" />
-            <span className="font-semibold">Back to Initiatives</span>
+            <span className="font-semibold">Înapoi la Inițiative</span>
           </Link>
         </div>
       </header>
@@ -181,7 +181,7 @@ const InitiativeDetail = () => {
             <Badge variant="secondary" className="capitalize">{initiative.category}</Badge>
             <Badge variant="outline" className="gap-1">
               <Clock className="h-3 w-3" />
-              {daysLeft} days remaining
+              {daysLeft} zile rămase
             </Badge>
           </div>
           <h1 className="text-4xl font-bold text-foreground">{initiative.title}</h1>
@@ -200,11 +200,11 @@ const InitiativeDetail = () => {
                 <div className="flex items-center gap-2">
                   <Users className="h-5 w-5 text-muted-foreground" />
                   <span className="text-2xl font-bold text-foreground">{totalVotes.toLocaleString()}</span>
-                  <span className="text-muted-foreground">votes</span>
+                  <span className="text-muted-foreground">voturi</span>
                 </div>
                 <div className="text-right">
                   <div className="text-2xl font-bold text-primary">{votePercentage}%</div>
-                  <div className="text-sm text-muted-foreground">in favor</div>
+                  <div className="text-sm text-muted-foreground">în favoare</div>
                 </div>
               </div>
               
@@ -213,11 +213,11 @@ const InitiativeDetail = () => {
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">
                     <ThumbsUp className="inline h-3 w-3 mr-1" />
-                    {(voteCounts?.votes_for || 0).toLocaleString()} for
+                    {(voteCounts?.votes_for || 0).toLocaleString()} pentru
                   </span>
                   <span className="text-muted-foreground">
                     <ThumbsDown className="inline h-3 w-3 mr-1" />
-                    {(voteCounts?.votes_against || 0).toLocaleString()} against
+                    {(voteCounts?.votes_against || 0).toLocaleString()} împotrivă
                   </span>
                 </div>
               </div>
@@ -228,14 +228,14 @@ const InitiativeDetail = () => {
             {/* Voting Actions */}
             {!hasVoted ? (
               <div className="space-y-3">
-                <p className="text-sm font-semibold text-foreground">Vote</p>
+                <p className="text-sm font-semibold text-foreground">Votează</p>
                 <div className="grid grid-cols-3 gap-3">
                   <Button
                     onClick={() => handleVote("for")}
                     className="gap-2 bg-success hover:bg-success/90 text-success-foreground"
                   >
                     <ThumbsUp className="h-4 w-4" />
-                    For
+                    Pentru
                   </Button>
                   <Button
                     onClick={() => handleVote("against")}
@@ -243,14 +243,14 @@ const InitiativeDetail = () => {
                     className="gap-2"
                   >
                     <ThumbsDown className="h-4 w-4" />
-                    Against
+                    Împotrivă
                   </Button>
                   <Button
                     onClick={() => handleVote("abstain")}
                     variant="outline"
                     className="gap-2"
                   >
-                    Abstain
+                    Abținere
                   </Button>
                 </div>
               </div>
@@ -259,9 +259,9 @@ const InitiativeDetail = () => {
                 <CheckCircle2 className="h-5 w-5 text-primary" />
                 <div>
                   <p className="font-semibold text-foreground">
-                    You voted: {userVote === "for" ? "For" : userVote === "against" ? "Against" : "Abstain"}
+                    Ai votat: {userVote === "for" ? "Pentru" : userVote === "against" ? "Împotrivă" : "Abținere"}
                   </p>
-                  <p className="text-sm text-muted-foreground">Thank you for participating!</p>
+                  <p className="text-sm text-muted-foreground">Mulțumim pentru participare!</p>
                 </div>
               </div>
             )}
@@ -270,7 +270,7 @@ const InitiativeDetail = () => {
 
         {/* Overview Section */}
         <section className="mb-8">
-          <h2 className="text-2xl font-bold text-foreground mb-4">Description</h2>
+          <h2 className="text-2xl font-bold text-foreground mb-4">Descriere</h2>
           <Card className="p-6">
             <p className="text-muted-foreground leading-relaxed">
               {initiative.description}
@@ -280,24 +280,24 @@ const InitiativeDetail = () => {
 
         {/* Initiative Information */}
         <section>
-          <h2 className="text-2xl font-bold text-foreground mb-4">Initiative Information</h2>
+          <h2 className="text-2xl font-bold text-foreground mb-4">Informații Inițiativă</h2>
           <Card className="p-6">
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Category</p>
+                <p className="text-sm text-muted-foreground mb-1">Categorie</p>
                 <p className="font-semibold text-foreground capitalize">{initiative.category}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Location</p>
+                <p className="text-sm text-muted-foreground mb-1">Locație</p>
                 <p className="font-semibold text-foreground">{initiative.location}</p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground mb-1">County</p>
+                <p className="text-sm text-muted-foreground mb-1">Județ</p>
                 <p className="font-semibold text-foreground">{initiative.counties?.name}</p>
               </div>
               {initiative.budget && (
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">Estimated Budget</p>
+                  <p className="text-sm text-muted-foreground mb-1">Buget estimat</p>
                   <p className="font-semibold text-foreground">{initiative.budget.toLocaleString()} RON</p>
                 </div>
               )}
@@ -306,15 +306,15 @@ const InitiativeDetail = () => {
                 <Badge variant="default" className="capitalize">{initiative.status}</Badge>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Start Date</p>
+                <p className="text-sm text-muted-foreground mb-1">Data început</p>
                 <p className="font-semibold text-foreground">
-                  {new Date(initiative.start_date).toLocaleDateString('en-US')}
+                  {new Date(initiative.start_date).toLocaleDateString('ro-RO')}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-muted-foreground mb-1">End Date</p>
+                <p className="text-sm text-muted-foreground mb-1">Data sfârșit</p>
                 <p className="font-semibold text-foreground">
-                  {new Date(initiative.end_date).toLocaleDateString('en-US')}
+                  {new Date(initiative.end_date).toLocaleDateString('ro-RO')}
                 </p>
               </div>
             </div>

@@ -33,7 +33,7 @@ const Index = () => {
         .single();
       
       if (error || !profile?.cnp) {
-        toast.error("Could not find your CNP in the profile");
+        toast.error("Nu am putut găsi CNP-ul tău în profil");
         setLoading(false);
         return;
       }
@@ -45,7 +45,7 @@ const Index = () => {
       const townCode = getTownCodeFromCnpCounty(profile.cnp);
       
       if (!townCode) {
-        toast.error("Your county does not have a city available on the platform at the moment");
+        toast.error("Județul tău nu are un oraș disponibil în platformă momentan");
         setLoading(false);
         return;
       }
@@ -54,15 +54,15 @@ const Index = () => {
       const town = findTownByCode(townCode);
       
       if (!town) {
-        toast.error("Could not find the city corresponding to your county");
+        toast.error("Nu am putut găsi orașul corespunzător județului tău");
         setLoading(false);
         return;
       }
       
       // Set town and redirect to county-specific page
       setSelectedTown(town);
-      toast.success(`Welcome to ${town.county} county!`, {
-        description: `You are viewing initiatives for ${town.name}`
+      toast.success(`Bine ai venit în județul ${town.county}!`, {
+        description: `Vizualizezi inițiativele pentru ${town.name}`
       });
       
       // Redirect to initiatives page with county filter
@@ -87,7 +87,7 @@ const Index = () => {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-4">
           <Vote className="h-12 w-12 text-primary mx-auto animate-pulse" />
-          <p className="text-muted-foreground">Loading...</p>
+          <p className="text-muted-foreground">Se încarcă...</p>
         </div>
       </div>
     );

@@ -74,7 +74,7 @@ export const Comment = ({ comment, initiativeId, onReplyAdded, level = 0 }: Comm
   const handleVote = async (voteType: "up" | "down") => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      toast.error("You must be authenticated to vote");
+      toast.error("Trebuie să fii autentificat pentru a vota");
       return;
     }
 
@@ -112,19 +112,19 @@ export const Comment = ({ comment, initiativeId, onReplyAdded, level = 0 }: Comm
       refetchVotes();
     } catch (error) {
       console.error("Error voting:", error);
-      toast.error("An error occurred while voting");
+      toast.error("A apărut o eroare la votare");
     }
   };
 
   const handleReply = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      toast.error("You must be authenticated to reply");
+      toast.error("Trebuie să fii autentificat pentru a răspunde");
       return;
     }
 
     if (!replyContent.trim()) {
-      toast.error("Please write a reply");
+      toast.error("Te rog scrie un răspuns");
       return;
     }
 
@@ -138,13 +138,13 @@ export const Comment = ({ comment, initiativeId, onReplyAdded, level = 0 }: Comm
 
       if (error) throw error;
 
-      toast.success("Reply added successfully!");
+      toast.success("Răspuns adăugat cu succes!");
       setReplyContent("");
       setShowReplyForm(false);
       onReplyAdded();
     } catch (error) {
       console.error("Error adding reply:", error);
-      toast.error("An error occurred while adding the reply");
+      toast.error("A apărut o eroare la adăugarea răspunsului");
     }
   };
 
@@ -183,7 +183,7 @@ export const Comment = ({ comment, initiativeId, onReplyAdded, level = 0 }: Comm
           {/* Comment content */}
           <div className="flex-1">
             <p className="text-sm text-muted-foreground mb-2">
-              {new Date(comment.created_at).toLocaleDateString('en-US', {
+              {new Date(comment.created_at).toLocaleDateString('ro-RO', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
@@ -200,7 +200,7 @@ export const Comment = ({ comment, initiativeId, onReplyAdded, level = 0 }: Comm
               className="gap-2 h-8 text-muted-foreground hover:text-foreground"
             >
               <MessageSquare className="h-4 w-4" />
-              Reply
+              Răspunde
             </Button>
 
             {showReplyForm && (
@@ -208,12 +208,12 @@ export const Comment = ({ comment, initiativeId, onReplyAdded, level = 0 }: Comm
                 <Textarea
                   value={replyContent}
                   onChange={(e) => setReplyContent(e.target.value)}
-                  placeholder="Write a reply..."
+                  placeholder="Scrie un răspuns..."
                   className="min-h-[80px]"
                 />
                 <div className="flex gap-2">
                   <Button onClick={handleReply} size="sm">
-                    Send reply
+                    Trimite răspuns
                   </Button>
                   <Button
                     onClick={() => {
@@ -223,7 +223,7 @@ export const Comment = ({ comment, initiativeId, onReplyAdded, level = 0 }: Comm
                     variant="outline"
                     size="sm"
                   >
-                    Cancel
+                    Anulează
                   </Button>
                 </div>
               </div>

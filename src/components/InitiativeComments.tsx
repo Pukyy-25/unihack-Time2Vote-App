@@ -35,12 +35,12 @@ export const InitiativeComments = ({ initiativeId }: InitiativeCommentsProps) =>
   const handleSubmitComment = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      toast.error("You must be authenticated to comment");
+      toast.error("Trebuie să fii autentificat pentru a comenta");
       return;
     }
 
     if (!newComment.trim()) {
-      toast.error("Please write a comment");
+      toast.error("Te rog scrie un comentariu");
       return;
     }
 
@@ -53,12 +53,12 @@ export const InitiativeComments = ({ initiativeId }: InitiativeCommentsProps) =>
 
       if (error) throw error;
 
-      toast.success("Comment added successfully!");
+      toast.success("Comentariu adăugat cu succes!");
       setNewComment("");
       refetch();
     } catch (error) {
       console.error("Error adding comment:", error);
-      toast.error("An error occurred while adding the comment");
+      toast.error("A apărut o eroare la adăugarea comentariului");
     }
   };
 
@@ -66,20 +66,20 @@ export const InitiativeComments = ({ initiativeId }: InitiativeCommentsProps) =>
     <section className="mt-8">
       <h2 className="text-2xl font-bold text-foreground mb-4 flex items-center gap-2">
         <MessageSquare className="h-6 w-6" />
-        Discussions ({comments?.length || 0})
+        Discuții ({comments?.length || 0})
       </h2>
 
       {/* Add new comment */}
       <Card className="p-6 mb-6">
-        <h3 className="text-lg font-semibold text-foreground mb-3">Add a comment</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-3">Adaugă un comentariu</h3>
         <Textarea
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
-          placeholder="Write your comment here..."
+          placeholder="Scrie comentariul tău aici..."
           className="min-h-[120px] mb-3"
         />
         <Button onClick={handleSubmitComment}>
-          Post comment
+          Publică comentariu
         </Button>
       </Card>
 
@@ -97,7 +97,8 @@ export const InitiativeComments = ({ initiativeId }: InitiativeCommentsProps) =>
         ) : (
           <Card className="p-8 text-center">
             <p className="text-muted-foreground">
-              No comments yet. Be the first to comment!</p>
+              Nu există comentarii încă. Fii primul care comentează!
+            </p>
           </Card>
         )}
       </div>

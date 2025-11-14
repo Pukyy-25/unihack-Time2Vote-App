@@ -11,27 +11,27 @@ import { format } from "date-fns";
 import { validateCnpCheckDigit, getCountyFromCnp } from "@/lib/cnp-counties";
 
 const loginSchema = z.object({
-  email: z.string().trim().email({ message: "Invalid email" }),
-  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+  email: z.string().trim().email({ message: "Email invalid" }),
+  password: z.string().min(6, { message: "Parola trebuie să aibă cel puțin 6 caractere" }),
 });
 
 const signupSchema = z.object({
-  email: z.string().trim().email({ message: "Invalid email" }),
-  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
-  confirmPassword: z.string().min(6, { message: "Password confirmation is required" }),
-  fullName: z.string().trim().min(3, { message: "Full name must be at least 3 characters" }),
-  phoneNumber: z.string().min(10, { message: "Phone number must have at least 10 digits" }).regex(/^(\+4|0)[0-9]{9}$/, { message: "Invalid phone number for Romania" }),
-  cnp: z.string().length(13, { message: "CNP must be exactly 13 digits" })
-    .regex(/^[0-9]{13}$/, { message: "CNP must contain only digits" })
+  email: z.string().trim().email({ message: "Email invalid" }),
+  password: z.string().min(6, { message: "Parola trebuie să aibă cel puțin 6 caractere" }),
+  confirmPassword: z.string().min(6, { message: "Confirmarea parolei este necesară" }),
+  fullName: z.string().trim().min(3, { message: "Numele complet trebuie să aibă cel puțin 3 caractere" }),
+  phoneNumber: z.string().min(10, { message: "Numărul de telefon trebuie să aibă cel puțin 10 cifre" }).regex(/^(\+4|0)[0-9]{9}$/, { message: "Număr de telefon invalid pentru România" }),
+  cnp: z.string().length(13, { message: "CNP-ul trebuie să aibă exact 13 cifre" })
+    .regex(/^[0-9]{13}$/, { message: "CNP-ul trebuie să conțină doar cifre" })
     .refine((cnp) => {
       // Validate check digit
       return validateCnpCheckDigit(cnp);
-    }, { message: "Invalid CNP - check digit is incorrect" })
+    }, { message: "CNP invalid - cifra de control nu este corectă" })
     .refine((cnp) => {
       // Validate county code
       const county = getCountyFromCnp(cnp);
       return county !== null;
-    }, { message: "Invalid CNP - unknown county code" })
+    }, { message: "CNP invalid - cod de județ necunoscut" })
     .refine((cnp) => {
       // Extract birth date from CNP (digits 2-7: YYMMDD)
       const yy = parseInt(cnp.substring(1, 3));
@@ -63,9 +63,9 @@ const signupSchema = z.object({
       const actualAge = monthDiff < 0 || (monthDiff === 0 && dayDiff < 0) ? age - 1 : age;
       
       return actualAge >= 18;
-    }, { message: "You must be at least 18 years old according to your CNP" }),
+    }, { message: "Trebuie să ai cel puțin 18 ani conform CNP-ului" }),
 }).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords do not match",
+  message: "Parolele nu se potrivesc",
   path: ["confirmPassword"],
 });
 
@@ -124,12 +124,12 @@ const Auth = () => {
 
         if (error) {
           if (error.message.includes("Invalid login credentials")) {
-            toast.error("Wrong email or password");
+            toast.error("Email sau parolă greșită");
           } else {
             toast.error(error.message);
           }
         } else {
-          toast.success("Successfully authenticated!");
+          toast.success("Autentificare reușită!");
         }
       } else {
         // Validate signup input
@@ -180,7 +180,7 @@ const Auth = () => {
 
         if (error) {
           if (error.message.includes("already registered")) {
-            toast.error("This email is already registered");
+            toast.error("Acest email este deja înregistrat");
           } else {
             toast.error(error.message);
           }
@@ -192,21 +192,21 @@ const Auth = () => {
               user_id: data.user.id,
               full_name: validation.data.fullName,
               birth_date: format(birthDate, 'yyyy-MM-dd'),
-              county: county || "Unknown",
+              county: county || "Necunoscut",
               city: "", // City is not extracted from CNP
               phone_number: validation.data.phoneNumber,
               cnp: validation.data.cnp,
             });
 
           if (profileError) {
-            toast.error("Error creating profile: " + profileError.message);
+            toast.error("Eroare la crearea profilului: " + profileError.message);
           } else {
-            toast.success("Account created successfully!");
+            toast.success("Cont creat cu succes!");
           }
         }
       }
     } catch (error) {
-      toast.error("An error occurred. Please try again.");
+      toast.error("A apărut o eroare. Te rugăm să încerci din nou.");
     } finally {
       setLoading(false);
     }
@@ -217,12 +217,12 @@ const Auth = () => {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">
-            {isLogin ? "Login" : "Create Account"}
+            {isLogin ? "Autentificare" : "Creare cont"}
           </CardTitle>
           <CardDescription className="text-center">
             {isLogin
-              ? "Log in to access the platform"
-              : "Create a new account to vote"}
+              ? "Intră în cont pentru a accesa platformă"
+              : "Creează un cont nou pentru a vota"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -232,14 +232,14 @@ const Auth = () => {
               <Input
                 id="email"
                 type="email"
-                placeholder="example@email.ro"
+                placeholder="exemplu@email.ro"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">Parolă</Label>
               <Input
                 id="password"
                 type="password"
@@ -253,7 +253,7 @@ const Auth = () => {
             {!isLogin && (
               <>
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  <Label htmlFor="confirmPassword">Confirmă Parola</Label>
                   <Input
                     id="confirmPassword"
                     type="password"
@@ -264,11 +264,11 @@ const Auth = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="fullName">Full Name</Label>
+                  <Label htmlFor="fullName">Nume Complet</Label>
                   <Input
                     id="fullName"
                     type="text"
-                    placeholder="Ex: John Smith"
+                    placeholder="Ex: Ion Popescu"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     required
@@ -280,11 +280,11 @@ const Auth = () => {
             {!isLogin && (
               <>
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
+                  <Label htmlFor="phone">Număr de telefon</Label>
                   <Input
                     id="phone"
                     type="tel"
-                    placeholder="+40 or 07xx xxx xxx"
+                    placeholder="+40 sau 07xx xxx xxx"
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
                     required
@@ -296,7 +296,7 @@ const Auth = () => {
             {!isLogin && (
               <>
                 <div className="space-y-2">
-                  <Label htmlFor="cnp">CNP (Personal Numeric Code)</Label>
+                  <Label htmlFor="cnp">CNP (Cod Numeric Personal)</Label>
                   <Input
                     id="cnp"
                     type="text"
@@ -307,14 +307,14 @@ const Auth = () => {
                     required
                   />
                   <p className="text-xs text-muted-foreground">
-                    County will be automatically extracted from CNP (digits 8-9)
+                    Județul va fi extras automat din CNP (cifrele 8-9)
                   </p>
                 </div>
               </>
             )}
 
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Processing..." : isLogin ? "Login" : "Create Account"}
+              {loading ? "Se procesează..." : isLogin ? "Autentificare" : "Creare cont"}
             </Button>
           </form>
           <div className="mt-4 text-center text-sm">
@@ -323,7 +323,7 @@ const Auth = () => {
               onClick={() => setIsLogin(!isLogin)}
               className="text-primary hover:underline"
             >
-              {isLogin ? "Don't have an account? Create one" : "Already have an account? Log in"}
+              {isLogin ? "Nu ai cont? Creează unul" : "Ai deja cont? Autentifică-te"}
             </button>
           </div>
         </CardContent>

@@ -12,7 +12,7 @@ import { AdminStats } from "@/components/AdminStats";
 import { AdminCreateInitiative } from "@/components/AdminCreateInitiative";
 import { useQuery } from "@tanstack/react-query";
 
-const categories = ["All", "infrastructure", "environment", "education", "health", "sports", "culture", "social", "other"];
+const categories = ["All", "infrastructură", "mediu", "educație", "sănătate", "sport", "cultură", "social", "altele"];
 
 const Initiatives = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -85,7 +85,7 @@ const Initiatives = () => {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    toast.success("Logged out successfully");
+    toast.success("Deconectat cu succes");
     navigate("/auth");
   };
 
@@ -113,7 +113,7 @@ const Initiatives = () => {
               onClick={handleSignOut}
             >
               <LogOut className="h-4 w-4 mr-2" />
-              Logout
+              Deconectare
             </Button>
           </div>
         </div>
@@ -148,9 +148,9 @@ const Initiatives = () => {
       {/* Initiatives Grid */}
       <main className="container mx-auto px-4 py-8">
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-foreground mb-2">Active Initiatives</h2>
+          <h2 className="text-2xl font-bold text-foreground mb-2">Inițiative Active</h2>
           <p className="text-muted-foreground">
-            {filteredInitiatives.length} initiatives available for voting
+            {filteredInitiatives.length} inițiative disponibile pentru votare
           </p>
         </div>
 
@@ -170,7 +170,7 @@ const Initiatives = () => {
                         </Badge>
                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
                           <Clock className="h-3 w-3" />
-                          {daysLeft}d remaining
+                          {daysLeft}d rămase
                         </div>
                       </div>
                       <h3 className="font-bold text-lg text-foreground leading-tight line-clamp-2 min-h-[3.5rem]">
@@ -191,7 +191,7 @@ const Initiatives = () => {
 
                     {/* CTA */}
                     <Button className="w-full mt-auto" variant="default">
-                      View & Vote
+                      Vezi & Votează
                     </Button>
                   </div>
                 </Card>
