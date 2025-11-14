@@ -51,6 +51,7 @@ export type Database = {
         Row: {
           birth_date: string
           city: string
+          cnp: string | null
           county: string
           created_at: string
           id: string
@@ -66,6 +67,7 @@ export type Database = {
         Insert: {
           birth_date: string
           city: string
+          cnp?: string | null
           county: string
           created_at?: string
           id?: string
@@ -81,6 +83,7 @@ export type Database = {
         Update: {
           birth_date?: string
           city?: string
+          cnp?: string | null
           county?: string
           created_at?: string
           id?: string
