@@ -232,7 +232,7 @@ const Auth = () => {
               <Input
                 id="email"
                 type="email"
-                placeholder="exemplu@email.ro"
+                placeholder="example@email.ro"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required

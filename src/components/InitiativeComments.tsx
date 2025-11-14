@@ -98,7 +98,6 @@ export const InitiativeComments = ({ initiativeId }: InitiativeCommentsProps) =>
           <Card className="p-8 text-center">
             <p className="text-muted-foreground">
               No comments yet. Be the first to comment!</p>
-            </p>
           </Card>
         )}
       </div>
