@@ -5,14 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { romanianTowns } from "@/lib/towns";
 
 const loginSchema = z.object({
@@ -24,16 +20,38 @@ const signupSchema = z.object({
   email: z.string().trim().email({ message: "Email invalid" }),
   password: z.string().min(6, { message: "Parola trebuie să aibă cel puțin 6 caractere" }),
   phoneNumber: z.string().min(10, { message: "Numărul de telefon trebuie să aibă cel puțin 10 cifre" }).regex(/^(\+4|0)[0-9]{9}$/, { message: "Număr de telefon invalid pentru România" }),
-  birthDate: z.date({
-    required_error: "Data nașterii este obligatorie",
-  }).refine((date) => {
+  cnp: z.string().length(13, { message: "CNP-ul trebuie să aibă exact 13 cifre" }).regex(/^[0-9]{13}$/, { message: "CNP-ul trebuie să conțină doar cifre" }).refine((cnp) => {
+    // Extract birth date from CNP (digits 2-7: YYMMDD)
+    const yy = parseInt(cnp.substring(1, 3));
+    const mm = parseInt(cnp.substring(3, 5));
+    const dd = parseInt(cnp.substring(5, 7));
+    
+    // Validate month and day
+    if (mm < 1 || mm > 12 || dd < 1 || dd > 31) {
+      return false;
+    }
+    
+    // Determine century from first digit
+    const firstDigit = parseInt(cnp[0]);
+    let fullYear: number;
+    if (firstDigit === 1 || firstDigit === 2) {
+      fullYear = 1900 + yy;
+    } else if (firstDigit === 5 || firstDigit === 6) {
+      fullYear = 2000 + yy;
+    } else {
+      return false;
+    }
+    
+    // Calculate age
+    const birthDate = new Date(fullYear, mm - 1, dd);
     const today = new Date();
-    const age = today.getFullYear() - date.getFullYear();
-    const monthDiff = today.getMonth() - date.getMonth();
-    const dayDiff = today.getDate() - date.getDate();
+    const age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    const dayDiff = today.getDate() - birthDate.getDate();
     const actualAge = monthDiff < 0 || (monthDiff === 0 && dayDiff < 0) ? age - 1 : age;
+    
     return actualAge >= 18;
-  }, { message: "Trebuie să ai cel puțin 18 ani" }),
+  }, { message: "Trebuie să ai cel puțin 18 ani conform CNP-ului" }),
   county: z.string().min(1, { message: "Județul este obligatoriu" }),
   city: z.string().min(1, { message: "Localitatea este obligatorie" }),
 });
@@ -44,7 +62,7 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [birthDate, setBirthDate] = useState<Date>();
+  const [cnp, setCnp] = useState("");
   const [county, setCounty] = useState("");
   const [city, setCity] = useState("");
   const [loading, setLoading] = useState(false);
@@ -113,11 +131,11 @@ const Auth = () => {
         // Validate signup input
         const validation = signupSchema.safeParse({ 
           email, 
-          password,
-          phoneNumber,
-          birthDate,
+          password, 
+          phoneNumber, 
+          cnp,
           county,
-          city 
+          city
         });
         
         if (!validation.success) {
@@ -125,6 +143,24 @@ const Auth = () => {
           setLoading(false);
           return;
         }
+
+        // Extract birth date from CNP
+        const cnpValue = validation.data.cnp;
+        const yy = parseInt(cnpValue.substring(1, 3));
+        const mm = parseInt(cnpValue.substring(3, 5));
+        const dd = parseInt(cnpValue.substring(5, 7));
+        const firstDigit = parseInt(cnpValue[0]);
+        
+        let fullYear: number;
+        if (firstDigit === 1 || firstDigit === 2) {
+          fullYear = 1900 + yy;
+        } else if (firstDigit === 5 || firstDigit === 6) {
+          fullYear = 2000 + yy;
+        } else {
+          fullYear = 1900 + yy;
+        }
+        
+        const birthDate = new Date(fullYear, mm - 1, dd);
 
         const redirectUrl = `${window.location.origin}/`;
         const { data, error } = await supabase.auth.signUp({
@@ -147,7 +183,7 @@ const Auth = () => {
             .from('profiles')
             .insert({
               user_id: data.user.id,
-              birth_date: format(validation.data.birthDate, 'yyyy-MM-dd'),
+              birth_date: format(birthDate, 'yyyy-MM-dd'),
               county: validation.data.county,
               city: validation.data.city,
               phone_number: validation.data.phoneNumber,
@@ -228,33 +264,19 @@ const Auth = () => {
             {!isLogin && (
               <>
                 <div className="space-y-2">
-                  <Label>Data nașterii</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !birthDate && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {birthDate ? format(birthDate, "dd/MM/yyyy") : <span>Selectează data</span>}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={birthDate}
-                        onSelect={setBirthDate}
-                        disabled={(date) =>
-                          date > new Date() || date < new Date("1900-01-01")
-                        }
-                        initialFocus
-                        className="pointer-events-auto"
-                      />
-                    </PopoverContent>
-                  </Popover>
+                  <Label htmlFor="cnp">CNP (Cod Numeric Personal)</Label>
+                  <Input
+                    id="cnp"
+                    type="text"
+                    placeholder="1234567890123"
+                    maxLength={13}
+                    value={cnp}
+                    onChange={(e) => setCnp(e.target.value.replace(/\D/g, ''))}
+                    required
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Cifrele 2-7 reprezintă data nașterii (AA/LL/ZZ)
+                  </p>
                 </div>
 
                 <div className="space-y-2">
