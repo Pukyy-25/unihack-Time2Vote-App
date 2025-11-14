@@ -7,13 +7,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { romanianTowns } from "@/lib/towns";
 import { z } from "zod";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { romanianTowns } from "@/lib/towns";
 
 const loginSchema = z.object({
   email: z.string().trim().email({ message: "Email invalid" }),
@@ -26,8 +26,12 @@ const signupSchema = z.object({
   birthDate: z.date({
     required_error: "Data nașterii este obligatorie",
   }).refine((date) => {
-    const age = new Date().getFullYear() - date.getFullYear();
-    return age >= 18;
+    const today = new Date();
+    const age = today.getFullYear() - date.getFullYear();
+    const monthDiff = today.getMonth() - date.getMonth();
+    const dayDiff = today.getDate() - date.getDate();
+    const actualAge = monthDiff < 0 || (monthDiff === 0 && dayDiff < 0) ? age - 1 : age;
+    return actualAge >= 18;
   }, { message: "Trebuie să ai cel puțin 18 ani" }),
   county: z.string().min(1, { message: "Județul este obligatoriu" }),
   city: z.string().min(1, { message: "Localitatea este obligatorie" }),
@@ -48,9 +52,10 @@ const Auth = () => {
   const counties = Array.from(new Set(romanianTowns.map(town => town.county))).sort();
   
   // Get cities for selected county
-  const cities = county 
-    ? romanianTowns.filter(town => town.county === county).sort((a, b) => a.name.localeCompare(b.name))
-    : [];
+  const cities = romanianTowns
+    .filter(town => town.county === county)
+    .map(town => town.name)
+    .sort();
 
   useEffect(() => {
     // Check for existing session
@@ -78,34 +83,19 @@ const Auth = () => {
     e.preventDefault();
     setLoading(true);
 
-    // Validate input
-    if (isLogin) {
-      const validation = loginSchema.safeParse({ email, password });
-      if (!validation.success) {
-        toast.error(validation.error.errors[0].message);
-        setLoading(false);
-        return;
-      }
-    } else {
-      const validation = signupSchema.safeParse({ 
-        email, 
-        password, 
-        birthDate, 
-        county, 
-        city 
-      });
-      if (!validation.success) {
-        toast.error(validation.error.errors[0].message);
-        setLoading(false);
-        return;
-      }
-    }
-
     try {
       if (isLogin) {
+        // Validate login input
+        const validation = loginSchema.safeParse({ email, password });
+        if (!validation.success) {
+          toast.error(validation.error.errors[0].message);
+          setLoading(false);
+          return;
+        }
+
         const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
+          email: validation.data.email,
+          password: validation.data.password,
         });
 
         if (error) {
@@ -118,37 +108,56 @@ const Auth = () => {
           toast.success("Autentificare reușită!");
         }
       } else {
+        // Validate signup input
+        const validation = signupSchema.safeParse({ 
+          email, 
+          password, 
+          birthDate,
+          county,
+          city 
+        });
+        
+        if (!validation.success) {
+          toast.error(validation.error.errors[0].message);
+          setLoading(false);
+          return;
+        }
+
         const redirectUrl = `${window.location.origin}/`;
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-          email,
-          password,
+        const { data, error } = await supabase.auth.signUp({
+          email: validation.data.email,
+          password: validation.data.password,
           options: {
             emailRedirectTo: redirectUrl,
           },
         });
 
-        if (authError) {
-          if (authError.message.includes("already registered")) {
+        if (error) {
+          if (error.message.includes("already registered")) {
             toast.error("Acest email este deja înregistrat");
           } else {
-            toast.error(authError.message);
+            toast.error(error.message);
           }
-        } else if (authData.user) {
-          // Create profile with additional data
+        } else if (data.user) {
+          // Create profile with additional information
           const { error: profileError } = await supabase
             .from('profiles')
             .insert({
-              user_id: authData.user.id,
-              birth_date: birthDate!.toISOString().split('T')[0],
-              county,
-              city,
+              user_id: data.user.id,
+              birth_date: format(validation.data.birthDate, 'yyyy-MM-dd'),
+              county: validation.data.county,
+              city: validation.data.city,
             });
 
           if (profileError) {
-            toast.error("Eroare la salvarea profilului: " + profileError.message);
+            toast.error("Eroare la crearea profilului: " + profileError.message);
           } else {
             toast.success("Cont creat cu succes! Te poți autentifica acum.");
             setIsLogin(true);
+            // Reset signup fields
+            setBirthDate(undefined);
+            setCounty("");
+            setCity("");
           }
         }
       }
@@ -196,7 +205,7 @@ const Auth = () => {
                 required
               />
             </div>
-            
+
             {!isLogin && (
               <>
                 <div className="space-y-2">
@@ -214,7 +223,7 @@ const Auth = () => {
                         {birthDate ? format(birthDate, "dd/MM/yyyy") : <span>Selectează data</span>}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 bg-background" align="start">
+                    <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
                         selected={birthDate}
@@ -224,9 +233,6 @@ const Auth = () => {
                         }
                         initialFocus
                         className="pointer-events-auto"
-                        captionLayout="dropdown-buttons"
-                        fromYear={1900}
-                        toYear={new Date().getFullYear()}
                       />
                     </PopoverContent>
                   </Popover>
@@ -238,13 +244,13 @@ const Auth = () => {
                     setCounty(value);
                     setCity(""); // Reset city when county changes
                   }}>
-                    <SelectTrigger className="bg-background">
+                    <SelectTrigger>
                       <SelectValue placeholder="Selectează județul" />
                     </SelectTrigger>
-                    <SelectContent className="bg-background z-50">
-                      {counties.map((c) => (
-                        <SelectItem key={c} value={c}>
-                          {c}
+                    <SelectContent>
+                      {counties.map((countyName) => (
+                        <SelectItem key={countyName} value={countyName}>
+                          {countyName}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -254,13 +260,13 @@ const Auth = () => {
                 <div className="space-y-2">
                   <Label htmlFor="city">Localitatea</Label>
                   <Select value={city} onValueChange={setCity} disabled={!county}>
-                    <SelectTrigger className="bg-background">
+                    <SelectTrigger>
                       <SelectValue placeholder="Selectează localitatea" />
                     </SelectTrigger>
-                    <SelectContent className="bg-background z-50">
-                      {cities.map((town) => (
-                        <SelectItem key={town.code} value={town.name}>
-                          {town.name}
+                    <SelectContent>
+                      {cities.map((cityName) => (
+                        <SelectItem key={cityName} value={cityName}>
+                          {cityName}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -268,7 +274,7 @@ const Auth = () => {
                 </div>
               </>
             )}
-            
+
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Se procesează..." : isLogin ? "Autentificare" : "Creare cont"}
             </Button>
