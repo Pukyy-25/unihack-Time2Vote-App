@@ -211,13 +211,9 @@ const Auth = () => {
         // Extract county from CNP
         const county = getCountyFromCnp(cnpValue);
 
-        const redirectUrl = `${window.location.origin}/`;
         const { data, error } = await supabase.auth.signUp({
           email: validation.data.email,
           password: validation.data.password,
-          options: {
-            emailRedirectTo: redirectUrl,
-          },
         });
 
         if (error) {
@@ -250,11 +246,21 @@ const Auth = () => {
             // Clean up the auth user if profile creation failed
             await supabase.auth.signOut();
           } else {
-            toast.success("Cont creat cu succes!");
-            // Redirect to town selection page after successful signup
-            setTimeout(() => {
-              navigate("/initiatives");
-            }, 1000);
+            // Autologin after signup
+            const { error: signInError } = await supabase.auth.signInWithPassword({
+              email: validation.data.email,
+              password: validation.data.password,
+            });
+
+            if (signInError) {
+              toast.error("Cont creat dar autologin a eșuat. Te rog autentifică-te manual.");
+            } else {
+              toast.success("Cont creat cu succes!");
+              // Redirect to initiatives page after successful signup
+              setTimeout(() => {
+                navigate("/initiatives");
+              }, 500);
+            }
           }
         }
       }
