@@ -177,8 +177,8 @@ const InitiativeDetail = () => {
         <div className="container mx-auto px-4 py-4">
           <Link to="/initiatives" className={`flex items-center gap-2 transition-colors ${
             theme === "light"
-              ? "text-gray-900 hover:text-pink-500"
-              : "text-white hover:text-pink-400"
+              ? "text-gray-900 hover:text-yellow-600"
+              : "text-white hover:text-yellow-400"
           }`}>
             <ArrowLeft className="h-5 w-5" />
             <span className="font-semibold">Înapoi la Inițiative</span>
@@ -211,8 +211,8 @@ const InitiativeDetail = () => {
         <Card className={`p-6 mb-8 ${
           theme === "light"
             ? "bg-white border-gray-200"
-            : "border-slate-700"
-        }`} style={theme === "dark" ? { backgroundColor: "#D3D5ED" } : undefined}>
+            : "bg-white border-gray-200"
+        }`}>
           <div className="space-y-6">
             {/* Vote Stats */}
             <div className="space-y-4">

@@ -130,8 +130,8 @@ const Initiatives = () => {
                 size="sm"
                 onClick={handleSignOut}
                 className={theme === "light"
-                  ? "text-gray-900 border-gray-300 hover:bg-gray-100"
-                  : "text-white border-slate-500 bg-slate-700 hover:bg-slate-600"
+                  ? "text-gray-900 border-gray-300 hover:bg-gray-100 hover:text-yellow-600"
+                  : "text-white border-slate-500 bg-slate-700 hover:bg-slate-600 hover:text-yellow-400"
                 }
               >
                 <LogOut className="h-4 w-4 mr-2" />
@@ -158,32 +158,22 @@ const Initiatives = () => {
         <div className="container mx-auto px-4 py-4">
           <div className="flex gap-2 overflow-x-auto">
             {categories.map((category) => (
-              <Button
+              <button
                 key={category}
-                variant={selectedCategory === category ? "default" : "outline"}
-                size="sm"
                 onClick={() => setSelectedCategory(category)}
-                className={`whitespace-nowrap ${
+                className={`px-3 py-2 text-sm font-medium rounded-md whitespace-nowrap transition-all ${
                   selectedCategory === category
                     ? theme === "light"
-                      ? "text-gray-900"
-                      : "text-gray-900"
+                      ? "text-black"
+                      : "text-black"
                     : theme === "light"
-                    ? "border-gray-300 text-gray-900 hover:bg-gray-100"
-                    : "text-gray-900 transition-colors"
+                    ? "border border-gray-300 text-gray-900 hover:text-yellow-600"
+                    : "border border-slate-600 text-white hover:text-yellow-400"
                 }`}
-                style={selectedCategory === category && theme === "dark" ? { 
-                  backgroundColor: "#FFAE00"
-                } : selectedCategory !== category && theme === "dark" ? { 
-                  backgroundColor: "#EDEDB3"
-                } : selectedCategory === category && theme === "light" ? {
-                  backgroundColor: "#FFAE00"
-                } : undefined}
-                onMouseEnter={(e) => selectedCategory !== category && theme === "dark" && (e.currentTarget.style.backgroundColor = "#FFAE00")}
-                onMouseLeave={(e) => selectedCategory !== category && theme === "dark" && (e.currentTarget.style.backgroundColor = "#EDEDB3")}
+                style={selectedCategory === category ? { backgroundColor: '#FFAE00' } : {}}
               >
                 {category}
-              </Button>
+              </button>
             ))}
           </div>
         </div>
