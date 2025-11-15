@@ -250,7 +250,11 @@ const Auth = () => {
             // Clean up the auth user if profile creation failed
             await supabase.auth.signOut();
           } else {
-            toast.success("Cont creat cu succes! Verifică email-ul pentru confirmare.");
+            toast.success("Cont creat cu succes!");
+            // Redirect to town selection page after successful signup
+            setTimeout(() => {
+              navigate("/initiatives");
+            }, 1000);
           }
         }
       }
