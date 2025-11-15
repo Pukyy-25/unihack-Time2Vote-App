@@ -3,8 +3,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { MapPin, Clock, Users, Building2, LogOut } from "lucide-react";
+import { MapPin, Clock, Users, Building2, LogOut, Settings } from "lucide-react";
 import { useTown } from "@/contexts/TownContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -17,6 +18,7 @@ const categories = ["All", "infrastructură", "mediu", "educație", "sănătate"
 const Initiatives = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const { selectedTown, setSelectedTown } = useTown();
+  const { theme } = useTheme();
   const navigate = useNavigate();
   const { isAdmin, loading: roleLoading } = useUserRole();
 
@@ -94,30 +96,51 @@ const Initiatives = () => {
   }
 
   return (
-    <div className="min-h-screen w-screen overflow-x-hidden" style={{
-      background: "#7a2d2d",
-      backgroundImage: "linear-gradient(90deg, rgba(122, 45, 45, 1) 0%, rgba(65, 30, 100, 1) 35%, rgba(9, 9, 121, 1) 50%, rgba(0, 100, 200, 1) 75%, rgba(0, 212, 255, 1) 100%)"
-    }}>
+    <div className={`min-h-screen w-screen overflow-x-hidden ${
+      theme === "light" ? "bg-gray-100" : "bg-gray-900"
+    }`}>
       {/* Header */}
-      <header className="border-b border-border bg-card">
+      <header className={`border-b ${
+        theme === "light"
+          ? "bg-white border-gray-200"
+          : "bg-slate-900/80 border-slate-700"
+      }`}>
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-3">
-              <Building2 className="h-5 w-5 text-primary" />
+              <Building2 className={`h-5 w-5 ${theme === "light" ? "text-pink-500" : "text-pink-400"}`} />
               <div>
-                <h1 className="text-lg md:text-xl font-bold text-foreground">{selectedTown.name}</h1>
-                <p className="text-xs text-muted-foreground">{selectedTown.county}</p>
+                <h1 className={`text-lg md:text-xl font-bold ${theme === "light" ? "text-gray-900" : "text-white"}`}>{selectedTown.name}</h1>
+                <p className={`text-xs ${theme === "light" ? "text-gray-600" : "text-slate-400"}`}>{selectedTown.county}</p>
               </div>
             </div>
 
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={handleSignOut}
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Deconectare
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => navigate("/settings")}
+                className={theme === "light"
+                  ? "text-gray-900 border-gray-300 hover:bg-gray-100"
+                  : "text-white border-slate-500 bg-slate-700 hover:bg-slate-600"
+                }
+              >
+                <Settings className="h-4 w-4 mr-2" />
+                Settings
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleSignOut}
+                className={theme === "light"
+                  ? "text-gray-900 border-gray-300 hover:bg-gray-100"
+                  : "text-white border-slate-500 bg-slate-700 hover:bg-slate-600"
+                }
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -130,7 +153,11 @@ const Initiatives = () => {
       )}
 
       {/* Category Filter */}
-      <div className="border-b border-border bg-card/50">
+      <div className={`border-b ${
+        theme === "light"
+          ? "bg-gray-50 border-gray-200"
+          : "bg-slate-800/50 border-slate-700"
+      }`}>
         <div className="container mx-auto px-4 py-4">
           <div className="flex gap-2 overflow-x-auto">
             {categories.map((category) => (
@@ -139,7 +166,15 @@ const Initiatives = () => {
                 variant={selectedCategory === category ? "default" : "outline"}
                 size="sm"
                 onClick={() => setSelectedCategory(category)}
-                className="whitespace-nowrap"
+                className={`whitespace-nowrap ${
+                  selectedCategory === category
+                    ? theme === "light"
+                      ? "bg-pink-500 hover:bg-pink-600 text-white"
+                      : "bg-pink-500 hover:bg-pink-600 text-white"
+                    : theme === "light"
+                    ? "border-gray-300 text-gray-900 hover:bg-gray-100"
+                    : "border-slate-500 text-slate-900 bg-slate-700 hover:bg-slate-600"
+                }`}
               >
                 {category}
               </Button>
@@ -149,17 +184,13 @@ const Initiatives = () => {
       </div>
 
       {/* Initiatives Grid */}
-      <main className="container mx-auto px-4 py-8">
+      <main className={`container mx-auto px-4 py-8 ${
+        theme === "light" ? "bg-gray-100" : ""
+      }`}>
         <div className="mb-6">
-<<<<<<< Updated upstream
-          <h2 className="text-2xl font-bold text-foreground mb-2">Inițiative Active</h2>
-          <p className="text-muted-foreground">
-            {filteredInitiatives.length} inițiative disponibile pentru votare
-=======
-          <h2 className="text-2xl font-bold text-white mb-2">Active Initiatives</h2>
-          <p className="text-slate-300">
+          <h2 className={`text-2xl font-bold mb-2 ${theme === "light" ? "text-gray-900" : "text-white"}`}>Active Initiatives</h2>
+          <p className={theme === "light" ? "text-gray-600" : "text-slate-300"}>
             {filteredInitiatives.length} initiatives available for voting
->>>>>>> Stashed changes
           </p>
         </div>
 
@@ -169,7 +200,11 @@ const Initiatives = () => {
 
             return (
               <Link key={initiative.id} to={`/initiative/${initiative.id}`}>
-                <Card className="h-full p-6 hover:shadow-lg transition-shadow cursor-pointer bg-gradient-to-b from-slate-800 to-slate-800/70 flex flex-col">
+                <Card className={`h-full p-6 hover:shadow-lg transition-shadow cursor-pointer flex flex-col ${
+                  theme === "light"
+                    ? "bg-white border-gray-200"
+                    : "bg-gradient-to-b from-slate-800 to-slate-800/70 border-slate-700"
+                }`}>
                   <div className="flex flex-col flex-1 space-y-4">
                     {/* Header */}
                     <div className="space-y-2">
@@ -177,35 +212,38 @@ const Initiatives = () => {
                         <Badge variant="secondary" className="text-xs capitalize">
                           {initiative.category}
                         </Badge>
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <div className={`flex items-center gap-1 text-xs ${
+                          theme === "light" ? "text-gray-500" : "text-slate-400"
+                        }`}>
                           <Clock className="h-3 w-3" />
                           {daysLeft}d rămase
                         </div>
                       </div>
-                      <h3 className="font-bold text-lg text-white leading-tight line-clamp-2 min-h-[3.5rem]">
+                      <h3 className={`font-bold text-lg leading-tight line-clamp-2 min-h-[3.5rem] ${
+                        theme === "light" ? "text-gray-900" : "text-white"
+                      }`}>
                         {initiative.title}
                       </h3>
                     </div>
 
                     {/* Description */}
-                    <p className="text-sm text-slate-300 line-clamp-3 min-h-[4.5rem]">
+                    <p className={`text-sm line-clamp-3 min-h-[4.5rem] ${
+                      theme === "light" ? "text-gray-600" : "text-slate-300"
+                    }`}>
                       {initiative.description}
                     </p>
 
                     {/* Location */}
-                    <div className="flex items-center gap-2 text-sm text-slate-300">
+                    <div className={`flex items-center gap-2 text-sm ${
+                      theme === "light" ? "text-gray-600" : "text-slate-300"
+                    }`}>
                       <MapPin className="h-4 w-4" />
                       {initiative.location}, {initiative.counties?.name}
                     </div>
 
                     {/* CTA */}
-<<<<<<< Updated upstream
-                    <Button className="w-full mt-auto" variant="default">
-                      Vezi & Votează
-=======
                     <Button className="w-full mt-auto bg-pink-500 hover:bg-pink-600 text-white" variant="default">
                       View & Vote
->>>>>>> Stashed changes
                     </Button>
                   </div>
                 </Card>
