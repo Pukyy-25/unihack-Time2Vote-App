@@ -129,6 +129,49 @@ export const Comment = ({ comment, initiativeId, onReplyAdded, level = 0 }: Comm
     }
 
     try {
+      // Check content with Gemini AI
+      const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      if (!geminiApiKey) {
+        toast.error("API key not configured");
+        return;
+      }
+
+      const geminiResponse = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{
+                text: `You are a content moderator. Analyze this comment for abusive, hateful, or offensive language. Comment: "${replyContent.trim()}" Respond with ONLY "SAFE" or "BLOCKED".`
+              }]
+            }],
+            safetySettings: [
+              { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+              { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+              { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+              { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' }
+            ]
+          })
+        }
+      );
+
+      const geminiData = await geminiResponse.json();
+      
+      // Check if Gemini blocked it
+      if (geminiData.promptFeedback?.blockReason) {
+        toast.error("Your reply was blocked for being inappropriate");
+        return;
+      }
+
+      const geminiText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      if (geminiText.includes('BLOCKED')) {
+        toast.error("Your reply contains inappropriate language. Please be respectful.");
+        return;
+      }
+
+      // If safe, insert into database
       const { error } = await supabase.from('initiative_comments').insert({
         initiative_id: initiativeId,
         user_id: user.id,
@@ -153,7 +196,7 @@ export const Comment = ({ comment, initiativeId, onReplyAdded, level = 0 }: Comm
 
   return (
     <div style={{ marginLeft }}>
-      <Card className="p-4 mb-3" style={{ backgroundColor: '#EDEDB3' }}>
+      <Card className="p-4 mb-3 bg-card">
         <div className="flex gap-3">
           {/* Vote buttons */}
           <div className="flex flex-col items-center gap-1">
@@ -161,12 +204,12 @@ export const Comment = ({ comment, initiativeId, onReplyAdded, level = 0 }: Comm
               variant="ghost"
               size="sm"
               onClick={() => handleVote("up")}
-              className={`h-8 w-8 p-0 ${userVote === "up" ? "text-primary" : "text-gray-700"}`}
+              className={`h-8 w-8 p-0 ${userVote === "up" ? "text-primary" : "text-muted-foreground"}`}
             >
               <ArrowUp className="h-4 w-4" />
             </Button>
             <span className={`text-sm font-semibold ${
-              score > 0 ? "text-primary" : score < 0 ? "text-destructive" : "text-gray-700"
+              score > 0 ? "text-primary" : score < 0 ? "text-destructive" : "text-muted-foreground"
             }`}>
               {score}
             </span>
@@ -174,7 +217,7 @@ export const Comment = ({ comment, initiativeId, onReplyAdded, level = 0 }: Comm
               variant="ghost"
               size="sm"
               onClick={() => handleVote("down")}
-              className={`h-8 w-8 p-0 ${userVote === "down" ? "text-destructive" : "text-gray-700"}`}
+              className={`h-8 w-8 p-0 ${userVote === "down" ? "text-destructive" : "text-muted-foreground"}`}
             >
               <ArrowDown className="h-4 w-4" />
             </Button>
@@ -182,7 +225,7 @@ export const Comment = ({ comment, initiativeId, onReplyAdded, level = 0 }: Comm
 
           {/* Comment content */}
           <div className="flex-1">
-            <p className="text-sm text-gray-700 mb-2">
+            <p className="text-sm text-muted-foreground mb-2">
               {new Date(comment.created_at).toLocaleDateString('ro-RO', {
                 year: 'numeric',
                 month: 'long',
@@ -191,13 +234,13 @@ export const Comment = ({ comment, initiativeId, onReplyAdded, level = 0 }: Comm
                 minute: '2-digit'
               })}
             </p>
-            <p className="text-gray-900 mb-3 whitespace-pre-wrap">{comment.content}</p>
+            <p className="text-foreground mb-3 whitespace-pre-wrap">{comment.content}</p>
             
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setShowReplyForm(!showReplyForm)}
-              className="gap-2 h-8 text-gray-700 hover:text-gray-900"
+              className="gap-2 h-8 text-muted-foreground hover:text-foreground"
             >
               <MessageSquare className="h-4 w-4" />
               Răspunde

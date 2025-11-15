@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Comment } from "./Comment";
-import { useTheme } from "@/contexts/ThemeContext";
 
 interface InitiativeCommentsProps {
   initiativeId: string;
@@ -15,7 +14,6 @@ interface InitiativeCommentsProps {
 
 export const InitiativeComments = ({ initiativeId }: InitiativeCommentsProps) => {
   const [newComment, setNewComment] = useState("");
-  const { theme } = useTheme();
 
   // Fetch top-level comments (no parent)
   const { data: comments, refetch } = useQuery({
@@ -47,6 +45,49 @@ export const InitiativeComments = ({ initiativeId }: InitiativeCommentsProps) =>
     }
 
     try {
+      // Check content with Gemini AI
+      const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      if (!geminiApiKey) {
+        toast.error("API key not configured");
+        return;
+      }
+
+      const geminiResponse = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{
+                text: `You are a content moderator. Analyze this comment for abusive, hateful, or offensive language. Comment: "${newComment.trim()}" Respond with ONLY "SAFE" or "BLOCKED".`
+              }]
+            }],
+            safetySettings: [
+              { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+              { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+              { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+              { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' }
+            ]
+          })
+        }
+      );
+
+      const geminiData = await geminiResponse.json();
+      
+      // Check if Gemini blocked it
+      if (geminiData.promptFeedback?.blockReason) {
+        toast.error("Your comment was blocked for being inappropriate");
+        return;
+      }
+
+      const geminiText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      if (geminiText.includes('BLOCKED')) {
+        toast.error("Your comment contains inappropriate language. Please be respectful.");
+        return;
+      }
+
+      // If safe, insert into database
       const { error } = await supabase.from('initiative_comments').insert({
         initiative_id: initiativeId,
         user_id: user.id,
@@ -66,21 +107,21 @@ export const InitiativeComments = ({ initiativeId }: InitiativeCommentsProps) =>
 
   return (
     <section className="mt-8">
-      <h2 className={`text-2xl font-bold mb-4 flex items-center gap-2 ${theme === "light" ? "text-gray-900" : "text-white"}`}>
+      <h2 className="text-2xl font-bold text-foreground mb-4 flex items-center gap-2">
         <MessageSquare className="h-6 w-6" />
         Discuții ({comments?.length || 0})
       </h2>
 
       {/* Add new comment */}
-      <Card className="p-6 mb-6" style={{ backgroundColor: '#EDEDB3' }}>
-        <h3 className="text-lg font-semibold text-gray-900 mb-3">Adaugă un comentariu</h3>
+      <Card className="p-6 mb-6">
+        <h3 className="text-lg font-semibold text-foreground mb-3">Adaugă un comentariu</h3>
         <Textarea
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
           placeholder="Scrie comentariul tău aici..."
           className="min-h-[120px] mb-3"
         />
-        <Button onClick={handleSubmitComment} style={{ backgroundColor: '#FFAE00', color: '#000' }}>
+        <Button onClick={handleSubmitComment}>
           Publică comentariu
         </Button>
       </Card>
@@ -97,8 +138,8 @@ export const InitiativeComments = ({ initiativeId }: InitiativeCommentsProps) =>
             />
           ))
         ) : (
-          <Card className="p-8 text-center" style={{ backgroundColor: '#EDEDB3' }}>
-            <p className="text-gray-900">
+          <Card className="p-8 text-center">
+            <p className="text-muted-foreground">
               Nu există comentarii încă. Fii primul care comentează!
             </p>
           </Card>

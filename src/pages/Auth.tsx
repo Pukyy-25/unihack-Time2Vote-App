@@ -211,13 +211,9 @@ const Auth = () => {
         // Extract county from CNP
         const county = getCountyFromCnp(cnpValue);
 
-        const redirectUrl = `${window.location.origin}/`;
         const { data, error } = await supabase.auth.signUp({
           email: validation.data.email,
           password: validation.data.password,
-          options: {
-            emailRedirectTo: redirectUrl,
-          },
         });
 
         if (error) {
@@ -250,7 +246,21 @@ const Auth = () => {
             // Clean up the auth user if profile creation failed
             await supabase.auth.signOut();
           } else {
-            toast.success("Cont creat cu succes! Verifică email-ul pentru confirmare.");
+            // Autologin after signup
+            const { error: signInError } = await supabase.auth.signInWithPassword({
+              email: validation.data.email,
+              password: validation.data.password,
+            });
+
+            if (signInError) {
+              toast.error("Cont creat dar autologin a eșuat. Te rog autentifică-te manual.");
+            } else {
+              toast.success("Cont creat cu succes!");
+              // Redirect to initiatives page after successful signup
+              setTimeout(() => {
+                navigate("/initiatives");
+              }, 500);
+            }
           }
         }
       }
@@ -291,7 +301,7 @@ const Auth = () => {
       <div 
         className="min-h-screen flex items-center justify-center p-4"
         style={{
-          backgroundImage: `url('/src/assets/background.png')`,
+          backgroundImage: `url('/src/assets/background-auth.png')`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundAttachment: 'fixed',
@@ -349,7 +359,7 @@ const Auth = () => {
     <div 
       className="min-h-screen flex items-center justify-center p-4"
       style={{
-        backgroundImage: `url('/src/assets/background.png')`,
+        backgroundImage: `url('/src/assets/background-auth.png')`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundAttachment: 'fixed',
@@ -487,7 +497,7 @@ const Auth = () => {
               </>
             )}
 
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full text-white" style={{ backgroundColor: '#5150A6' }} disabled={loading}>
               {loading ? "Se procesează..." : isLogin ? "Autentificare" : "Creare cont"}
             </Button>
 
