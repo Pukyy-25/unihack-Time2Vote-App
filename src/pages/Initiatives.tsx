@@ -15,6 +15,19 @@ import { useQuery } from "@tanstack/react-query";
 
 const categories = ["All", "infrastructură", "mediu", "educație", "sănătate", "sport", "cultură", "social", "altele"];
 
+// Map UI categories to database categories
+const categoryMap: { [key: string]: string[] } = {
+  "All": ["transport", "infrastructura", "mediu", "educatie", "sanatate", "sport", "cultura", "social", "socializare", "turism", "economie", "mobilitate", "recreatie"],
+  "infrastructură": ["transport", "infrastructura", "mobilitate"],
+  "mediu": ["mediu"],
+  "educație": ["educatie"],
+  "sănătate": ["sanatate"],
+  "sport": ["sport"],
+  "cultură": ["cultura", "turism"],
+  "social": ["social", "socializare"],
+  "altele": ["economie", "recreatie"]
+};
+
 const Initiatives = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const { selectedTown, setSelectedTown } = useTown();
@@ -75,7 +88,7 @@ const Initiatives = () => {
 
   const filteredInitiatives = selectedCategory === "All" 
     ? initiatives 
-    : initiatives.filter(i => i.category === selectedCategory);
+    : initiatives.filter(i => categoryMap[selectedCategory]?.includes(i.category));
 
   const getDaysLeft = (endDate: string) => {
     const end = new Date(endDate);
