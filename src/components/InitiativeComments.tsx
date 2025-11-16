@@ -60,18 +60,22 @@ export const InitiativeComments = ({ initiativeId }: InitiativeCommentsProps) =>
           body: JSON.stringify({
             contents: [{
               parts: [{
-                text: `Ești moderator de conținut pentru un forum de discuții civice din România. Analizează comentariul următor pentru injuraturi, limbaj vulgar, sau insultă în limba română. 
+                text: `You are a content moderator for a civic discussion forum from Romania. Analyze the following comment for profanity, vulgar language, insults, hate speech, or inappropriate content in both Romanian and English.
 
-Comentariu: "${newComment.trim()}"
+Comment to analyze: "${newComment.trim()}"
 
-Răspunde cu DOAR un cuvânt: "SAFE" dacă comentariul este respectuos și nu conține injuraturi/insultă în limba română, sau "BLOCKED" dacă conține limbaj vulgar/injurii românești.`
+Respond with ONLY one word:
+- "SAFE" if the comment is respectful and contains NO profanity, vulgar language, insults, or any inappropriate content in either Romanian or English.
+- "BLOCKED" if the comment contains ANY inappropriate language, swearing, insults, hate speech, or vulgar content in either Romanian or English, regardless of intensity.
+
+Be very strict - block ANY comment that could be considered offensive or inappropriate.`
               }]
             }],
             safetySettings: [
-              { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-              { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-              { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-              { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' }
+              { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_LOW_AND_ABOVE' },
+              { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_LOW_AND_ABOVE' },
+              { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_LOW_AND_ABOVE' },
+              { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_LOW_AND_ABOVE' }
             ]
           })
         }
@@ -81,13 +85,13 @@ Răspunde cu DOAR un cuvânt: "SAFE" dacă comentariul este respectuos și nu co
       
       // Check if Gemini blocked it
       if (geminiData.promptFeedback?.blockReason) {
-        toast.error("Your comment was blocked for being inappropriate");
+        toast.error("Comentariul tău a fost blocat din cauza conținutului inadecvat");
         return;
       }
 
       const geminiText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || '';
       if (geminiText.includes('BLOCKED')) {
-        toast.error("Your comment contains inappropriate language. Please be respectful.");
+        toast.error("Comentariul tău conține limbaj inadecvat. Te rugăm să fii respectuos.");
         return;
       }
 
@@ -111,13 +115,13 @@ Răspunde cu DOAR un cuvânt: "SAFE" dacă comentariul este respectuos și nu co
 
   return (
     <section className="mt-8">
-      <h2 className="text-2xl font-bold text-foreground mb-4 flex items-center gap-2">
+      <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
         <MessageSquare className="h-6 w-6" />
         Discuții ({comments?.length || 0})
       </h2>
 
       {/* Add new comment */}
-      <Card className="p-6 mb-6">
+      <Card className="p-6 mb-6" style={{ backgroundColor: '#EDEDB3' }}>
         <h3 className="text-lg font-semibold text-foreground mb-3">Adaugă un comentariu</h3>
         <Textarea
           value={newComment}
